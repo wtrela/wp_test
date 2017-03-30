@@ -1,13 +1,8 @@
 import logging
-import re
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 
-import yaml
 import requests
-import json
 import time
 
 from wp_test.models.website import Website

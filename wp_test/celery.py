@@ -1,9 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 from celery import Celery
 from django.conf import settings
-from celery.schedules import crontab
 from django.core.management import call_command
 from celery.utils.log import get_task_logger
+
+from wp_test.models.website import Website
 
 logger = get_task_logger(__name__)
 
@@ -27,9 +28,10 @@ def load_yaml():
 
 
 @app.task
-def request_website():
+def request_website(website):
     logger.info("task")
-    call_command('request_website')
+    logger.info("'request_website', '{}'.format(website)")
+    call_command('request_website', '{}'.format(website))
 
 
 @app.on_after_configure.connect
@@ -37,9 +39,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # start async call here each time celery is initialized
     load_yaml.delay()
-    request_website.delay()
 
-    # periodical calls
-    sender.add_periodic_task(crontab(second='*/75'), request_website)
+    for website in Website.objects.all():
+        # periodical calls
+        sender.add_periodic_task(website.delay, request_website(website))
 
 
