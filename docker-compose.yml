@@ -1,0 +1,73 @@
+version: '2'
+
+services:
+  backend:
+    image: wptest_backend
+    build: .
+    container_name: wptest_backend
+    entrypoint: python manage.py
+    command: runserver 0.0.0.0:8000
+    restart: always
+    env_file:
+      - local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=wp_test.settings
+    volumes:
+      - ./:/app/
+    ports:
+      - "80:8000"
+    networks:
+      - wptest_backend
+      - wptest_redis
+      - wptest_db
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    image: wptest_backend
+    container_name: wptest_celery
+    command: celery -A wp_test worker -B -l info
+    restart: always
+    env_file:
+      - local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=wp_test.settings
+    volumes:
+      - ./:/app/
+    networks:
+      - wptest_backend
+      - wptest_redis
+      - wptest_db
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis
+    container_name: wptest_redis
+    restart: always
+    networks:
+      - wptest_redis
+
+  db:
+    image: postgres
+    container_name: wptest_db
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - wptest_db
+
+networks:
+  wptest_backend:
+    external:
+      name: wptest_db
+
+  wptest_redis:
+    external:
+      name: wptest_redis
+
+  wptest_db:
+    external:
+      name: wptest_db

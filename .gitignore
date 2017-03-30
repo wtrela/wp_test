@@ -1,0 +1,7 @@
+.idea/
+Thumbs.db
+*.py[cod]
+
+*.pot
+wp_test/migrations/*.py
+!wp_test/migrations/__init__.py
