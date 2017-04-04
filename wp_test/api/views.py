@@ -20,8 +20,8 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 class WebsiteViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    #permission_classes = [permissions.IsAdminUser]
     queryset = Website.objects.all()
     serializer_class = WebsiteSerializer
     filter_fields = ['id', 'url', 'delay', 'response_code', 'response_time']

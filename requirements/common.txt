@@ -16,3 +16,4 @@ django_oauth2_provider
 redis==2.10.5
 requests==2.4.3
 pyyaml
+twisted

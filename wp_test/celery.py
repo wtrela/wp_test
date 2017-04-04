@@ -3,8 +3,10 @@ from celery import Celery
 from django.conf import settings
 from django.core.management import call_command
 from celery.utils.log import get_task_logger
+from twisted.internet import task
+from twisted.internet import reactor
 
-from wp_test.models.website import Website
+
 
 logger = get_task_logger(__name__)
 
@@ -16,22 +18,23 @@ app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
-@app.task(bind=True)
-def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
-
-
 @app.task
 def load_yaml():
-    logger.info("task")
+    logger.info("load_yaml")
     call_command('load_yaml')
 
 
 @app.task
-def request_website(website):
-    logger.info("task")
-    logger.info("'request_website', '{}'.format(website)")
-    call_command('request_website', '{}'.format(website))
+def request_website():
+    from wp_test.models.website import Website
+    def call(*args):
+        call_command('request_website', website)
+
+    for website in Website.objects.all():
+        l = task.LoopingCall(call, website, website.delay)
+        l.start(website.delay)
+
+    reactor.run()
 
 
 @app.on_after_configure.connect
@@ -39,9 +42,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # start async call here each time celery is initialized
     load_yaml.delay()
+    request_website.delay()
 
-    for website in Website.objects.all():
-        # periodical calls
-        sender.add_periodic_task(website.delay, request_website(website))
 
 
